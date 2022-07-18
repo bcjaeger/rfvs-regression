@@ -9,6 +9,8 @@
 # RETURNS: selected variables, a corresponding forest and OOB-error for the
 #          0 s.e. and 1 s.e. rule
 
+## NOT USED; kept for reference, see [rfvs_jiang]
+
 v_select_jiang <- function(Y,
                            X,
                            recompute = T,
@@ -54,6 +56,7 @@ v_select_jiang <- function(Y,
    selections[[i - 1]] <-
    names(sort(varimp(forest, pre1.0_0 = T), decreasing = T))[-i]
  }
+
  # compute the error expected when no predictor is used at all
  errors <-
   c(mean((

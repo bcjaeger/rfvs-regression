@@ -31,7 +31,11 @@ tar_plan(
  rfvs = c(
   'rfvs_none',
   'rfvs_permute',
-  'rfvs_cif'
+  'rfvs_mindepth_medium',
+  'rfvs_mindepth_high',
+  'rfvs_mindepth_low',
+  'rfvs_cif',
+  'rfvs_jiang'
  ),
 
  tar_target(
@@ -44,6 +48,10 @@ tar_plan(
   resources = branch_resources,
   memory = "transient",
   garbage_collection = TRUE
- )
+ ),
+
+ results_smry = bench_summarize(results),
+
+ tar_render(readme, "README.Rmd")
 
 )

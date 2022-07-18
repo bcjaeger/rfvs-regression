@@ -26,3 +26,4 @@ library(ranger)
 library(recipes)
 
 conflict_prefer('filter', 'dplyr')
+library(rmarkdown)

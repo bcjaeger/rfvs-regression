@@ -1,0 +1,71 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# rfvs-regression
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of rfvs-regression is to ...
+
+# Central illustration
+
+This will be a figure at some point, but a table will do for now.
+
+```{r}
+
+tar_load(results_smry)
+library(table.glue)
+
+data_tbl <- results_smry %>% 
+ ungroup() %>% 
+ mutate(
+  rfvs = str_remove(rfvs, 'rfvs_'),
+  across(starts_with('n_selected'), ~ as.integer(round(.x))),
+  across(starts_with('time'),  ~ as.numeric(.x, units = 'secs'))
+ ) %>% 
+ arrange(rsq_50)
+
+tbl_vars <- c('n_selected',
+              # 'rmse', 
+              'rsq',
+              'time')
+
+for(t in tbl_vars){
+ 
+ t25 <- data_tbl[[paste(t, "25", sep = '_')]]
+ t50 <- data_tbl[[paste(t, "50", sep = '_')]]
+ t75 <- data_tbl[[paste(t, "75", sep = '_')]]
+ 
+ data_tbl[[t]] <- table_glue("{t25} ({t25} - {t75})")
+ 
+}
+
+data_tbl <- data_tbl %>% 
+ select(rfvs, all_of(tbl_vars))
+
+
+library(gt)
+
+gt(data_tbl, rowname_col = 'rfvs') %>% 
+ cols_label(n_selected = 'N variables selected',
+            rsq = 'R-squared',
+            time = 'Selection time, seconds') %>% 
+ cols_align('center') %>% 
+ tab_stubhead(label = 'Variable selection method') %>% 
+ tab_spanner(columns = everything(), label = 'Median (25th - 75th percentile)')
+
+
+
+```
+

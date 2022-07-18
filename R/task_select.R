@@ -72,7 +72,7 @@ task_select <- function(max_miss_prop = 0,
    n = nrow(tasks)
   )
 
- list(data = tasks,
+ list(data = tasks[1:50],
       record = task_record)
 
 }

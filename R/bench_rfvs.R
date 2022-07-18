@@ -40,7 +40,12 @@ bench_rfvs <- function(task,
  # select variables in training set
 
  start_time <- Sys.time()
- vars_selected <- do.call(rfvs, args = list(train, outcome_colname))
+
+ vars_selected <- rfvs %>%
+  do.call(args = list(train = train,
+                      formula = formula)) %>%
+  c(outcome_colname)
+
  end_time <- Sys.time()
 
  # fit a final model to the training data
