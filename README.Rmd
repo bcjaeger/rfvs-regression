@@ -1,5 +1,6 @@
 ---
 output: github_document
+always_allow_html: true
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -24,8 +25,10 @@ This will be a figure at some point, but a table will do for now.
 
 ```{r}
 
-tar_load(results_smry)
+targets::tar_load(results_smry)
+
 library(table.glue)
+library(tidyverse)
 
 data_tbl <- results_smry %>% 
  ungroup() %>% 
@@ -55,16 +58,16 @@ data_tbl <- data_tbl %>%
  select(rfvs, all_of(tbl_vars))
 
 
-library(gt)
+library(knitr)
+library(kableExtra)
 
-gt(data_tbl, rowname_col = 'rfvs') %>% 
- cols_label(n_selected = 'N variables selected',
-            rsq = 'R-squared',
-            time = 'Selection time, seconds') %>% 
- cols_align('center') %>% 
- tab_stubhead(label = 'Variable selection method') %>% 
- tab_spanner(columns = everything(), label = 'Median (25th - 75th percentile)')
-
+kable(data_tbl,
+      col.names = c('Selection method',
+                    'N variables selected',
+                    'R-squared',
+                    'Selection time, seconds'),
+      align = 'lccc') %>% 
+ kable_styling()
 
 
 ```
