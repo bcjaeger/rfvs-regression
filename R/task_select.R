@@ -23,26 +23,16 @@ task_select <- function(max_miss_prop = 0,
 
  task_record <- tibble(exclusion = character(), n = integer())
 
- tasks <- as.data.table(listOMLTasks())
+ # include regression tasks
+ tasks <- as.data.table(listOMLTasks(task.type = "Supervised Regression"))
 
+ # sparse_ARFF data throw errors when open ML loads them (???)
+ # TODO: figure out why sparse_ARFF is causing error on load.
  tasks <- tasks[format != 'Sparse_ARFF']
 
  task_record <- task_record %>%
   add_row(
-   exclusion = paste0(
-    "tasks available from open ML"
-   ),
-   n = nrow(tasks)
-  )
-
- # include regression tasks
- tasks <- tasks[task.type == 'Supervised Regression']
-
- task_record <- task_record %>%
-  add_row(
-   exclusion = paste0(
-    "tasks with continuous outcome"
-   ),
+   exclusion = "Supervised regression tasks from open ML",
    n = nrow(tasks)
   )
 

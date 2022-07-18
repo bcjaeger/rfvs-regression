@@ -48,13 +48,11 @@ v_select_jiang <- function(Y,
            predict(forest, OOB = T)
           ))) ^ 2)
   # define the next set of variables
-  if (recompute == F &
-      i > 1)
+  if (recompute == F & i > 1)
    selections[[i - 1]] <- selections[[i]][-i]
-  if (recompute == T &
-      i > 1)
-   selections[[i - 1]] <- names(sort(varimp(forest,
-                                            pre1.0_0 = T), decreasing = T))[-i]
+  if (recompute == T & i > 1)
+   selections[[i - 1]] <-
+   names(sort(varimp(forest, pre1.0_0 = T), decreasing = T))[-i]
  }
  # compute the error expected when no predictor is used at all
  errors <-
