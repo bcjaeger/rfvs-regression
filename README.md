@@ -91,86 +91,16 @@ Selection time, seconds
 <tbody>
 <tr>
 <td style="text-align:left;">
-permute
+hap
 </td>
 <td style="text-align:center;">
-7 (7 - 20)
+1 (1 - 3)
 </td>
 <td style="text-align:center;">
-0.34 (0.34 - 0.53)
+-0.11 (-0.11 - 0.03)
 </td>
 <td style="text-align:center;">
-0.04 (0.04 - 0.06)
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mindepth_low
-</td>
-<td style="text-align:center;">
-6 (6 - 11)
-</td>
-<td style="text-align:center;">
-0.35 (0.35 - 0.55)
-</td>
-<td style="text-align:center;">
-14 (14 - 23)
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mindepth_medium
-</td>
-<td style="text-align:center;">
-5 (5 - 10)
-</td>
-<td style="text-align:center;">
-0.37 (0.37 - 0.55)
-</td>
-<td style="text-align:center;">
-14 (14 - 24)
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cif
-</td>
-<td style="text-align:center;">
-6 (6 - 14)
-</td>
-<td style="text-align:center;">
-0.36 (0.36 - 0.52)
-</td>
-<td style="text-align:center;">
-19 (19 - 95)
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mindepth_high
-</td>
-<td style="text-align:center;">
-5 (5 - 10)
-</td>
-<td style="text-align:center;">
-0.36 (0.36 - 0.55)
-</td>
-<td style="text-align:center;">
-12 (12 - 20)
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-jiang
-</td>
-<td style="text-align:center;">
-3 (3 - 6)
-</td>
-<td style="text-align:center;">
-0.42 (0.42 - 0.57)
-</td>
-<td style="text-align:center;">
-6.3 (6.3 - 40)
+108 (108 - 245)
 </td>
 </tr>
 <tr>
@@ -178,13 +108,97 @@ jiang
 none
 </td>
 <td style="text-align:center;">
-11 (11 - 46)
+25 (25 - 58)
 </td>
 <td style="text-align:center;">
-0.49 (0.49 - 0.74)
+0.27 (0.27 - 0.47)
 </td>
 <td style="text-align:center;">
 0.00 (0.00 - 0.00)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cif
+</td>
+<td style="text-align:center;">
+15 (15 - 29)
+</td>
+<td style="text-align:center;">
+0.35 (0.35 - 0.52)
+</td>
+<td style="text-align:center;">
+74 (74 - 377)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+permute
+</td>
+<td style="text-align:center;">
+15 (15 - 31)
+</td>
+<td style="text-align:center;">
+0.35 (0.35 - 0.51)
+</td>
+<td style="text-align:center;">
+0.12 (0.12 - 0.26)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mindepth_low
+</td>
+<td style="text-align:center;">
+5 (5 - 25)
+</td>
+<td style="text-align:center;">
+0.40 (0.40 - 0.57)
+</td>
+<td style="text-align:center;">
+18 (18 - 34)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mindepth_high
+</td>
+<td style="text-align:center;">
+5 (5 - 23)
+</td>
+<td style="text-align:center;">
+0.45 (0.45 - 0.57)
+</td>
+<td style="text-align:center;">
+16 (16 - 31)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mindepth_medium
+</td>
+<td style="text-align:center;">
+5 (5 - 25)
+</td>
+<td style="text-align:center;">
+0.43 (0.43 - 0.57)
+</td>
+<td style="text-align:center;">
+18 (18 - 34)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+jiang
+</td>
+<td style="text-align:center;">
+3 (3 - 5)
+</td>
+<td style="text-align:center;">
+0.54 (0.54 - 0.63)
+</td>
+<td style="text-align:center;">
+45 (45 - 159)
 </td>
 </tr>
 </tbody>

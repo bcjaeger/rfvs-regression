@@ -7,20 +7,16 @@
 #' @param run
 #' @param rfvs
 #' @param tasks_included
-bench_rfvs <- function(task,
+bench_rfvs <- function(dataset,
+                       outcome,
+                       rfvs_label,
+                       rfvs_fun,
                        run,
-                       rfvs,
-                       tasks_included,
-                       train_prop = 1/2,
-                       outcome_colname = 'outcome') {
+                       train_prop = 1/2) {
 
- data <- try(
-  tasks_included %>%
-   get_oml_data(index = task, outcome_colname = outcome_colname),
-  silent = TRUE
- )
+ fname <- as.character(glue("data/{dataset}-outcome-{outcome}.csv"))
 
- if(is_error(data)) browser()
+ data <- fread(fname)
 
  # set seed for each run using the value of run, i.e., 1, ..., n_runs
  # -> same train/test split for each run within each task
@@ -28,10 +24,17 @@ bench_rfvs <- function(task,
 
  split <- initial_split(data, prop = train_prop)
 
- formula <- as.formula(glue("{outcome_colname} ~ ."))
+ formula <- outcome ~ .
 
  processor <- recipe(data, formula = formula) %>%
+  # in case we allow missing values
+  step_impute_mean(all_numeric_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  # sparse factor protection
+  step_novel(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
+  # cast weird integer 64 types to doubles
+  step_mutate(across(everything(), as.numeric)) %>%
   prep(training = training(split))
 
  train <- juice(processor)
@@ -41,29 +44,34 @@ bench_rfvs <- function(task,
 
  start_time <- Sys.time()
 
- vars_selected <- rfvs %>%
-  do.call(args = list(train = train,
-                      formula = formula)) %>%
-  c(outcome_colname)
+ vars_selected <- rfvs_fun(train = train, formula = formula) %>%
+  c("outcome") %>%
+  unique()
 
  end_time <- Sys.time()
 
  # fit a final model to the training data
  # using the .. prefix to select columns from a data.table
+
+ # fit <- rfsrc(outcome ~ .,
+ #              data = as.data.frame(train[, vars_selected]))
+
  fit <- try(ranger(outcome ~ ., data = train[, vars_selected]))
 
  if(is_error(fit)) browser()
 
- pred <- predict(fit, data = test[, vars_selected])
- truth <- test[[outcome_colname]]
+ pred <- predict(fit, data = as.data.frame(test[, vars_selected]))
 
- tibble(task = task,
-        run = run,
-        rfvs = rfvs,
-        n_selected = length(vars_selected) - 1,
-        rmse = eval_rmse(pred$predictions, truth),
-        rsq = eval_rsq(pred$predictions, truth),
-        time = end_time - start_time)
+ tibble(
+  dataset = dataset,
+  outcome = outcome,
+  rfvs = rfvs_label,
+  run = run,
+  n_selected = length(vars_selected) - 1,
+  rmse = eval_rmse(pred$predictions, test$outcome),
+  rsq = eval_rsq(pred$predictions, test$outcome),
+  time = end_time - start_time
+ )
 
 
 }

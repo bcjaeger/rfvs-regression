@@ -4,9 +4,9 @@
 #'
 #' @title
 #' @param results
-bench_summarize <- function(results) {
+bench_summarize <- function(bm_comb) {
 
- results %>%
+ bm_comb %>%
   group_by(rfvs) %>%
   summarise(
    across(

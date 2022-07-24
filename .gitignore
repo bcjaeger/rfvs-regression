@@ -46,3 +46,7 @@ renv/
 .Rproj.user
 .Rdata
 .DS_Store
+
+
+# datasets
+data

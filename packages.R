@@ -23,6 +23,7 @@ library(RRF)
 library(glue)
 library(rsample)
 library(ranger)
+library(rfvimptest)
 library(recipes)
 
 conflict_prefer('filter', 'dplyr')

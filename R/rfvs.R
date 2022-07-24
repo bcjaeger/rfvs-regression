@@ -12,6 +12,19 @@ rfvs_none <- function(train, formula, ...) {
 
 }
 
+rfvs_hap <- function(train, formula, ...){
+
+ vi <- rfvimptest(data = train, yname = 'outcome', alpha = 0.2)
+
+ if(all(vi$testres == 'keep H0')){
+
+  return(names(sort(vi$perms, decreasing = TRUE))[1])
+
+ }
+
+ names(vi$testres)[vi$testres == 'accept H1']
+
+}
 
 rfvs_permute <- function(train, formula, ...) {
 
@@ -20,6 +33,15 @@ rfvs_permute <- function(train, formula, ...) {
                importance = 'permutation')
 
  vi <- fit$variable.importance
+
+ if(all(vi <= 0)){
+  return(
+   vi %>%
+    sort(decreasing = TRUE) %>%
+    names() %>%
+    getElement(1)
+  )
+ }
 
  names(vi)[vi > 0]
 

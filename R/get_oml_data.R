@@ -26,11 +26,28 @@ get_oml_data <- function(tasks_included,
 
  data_id <- dt$data.id[index]
 
- oml_data <- getOMLDataSet(data_id, verbosity = 0)
+ fpath <- file.path('data', paste0('oml_', data_id, '.rds'))
 
- as.data.table(oml_data$data) %>%
-  setnames(old = dt$target.feature[index],
-           new = outcome_colname)
+ # my own cache b/c open ML server is unreliable
+ if( file.exists(fpath) ){
+
+  return(fread(fpath))
+
+ } else {
+
+  oml_data <- getOMLDataSet(data_id, verbosity = 0)
+
+  out <- as.data.table(oml_data$data) %>%
+   setnames(old = dt$target.feature[index],
+            new = outcome_colname)
+
+  fwrite(out, fpath)
+
+ }
+
+
+
+ out
 
 }
 
