@@ -17,14 +17,6 @@ targets::tar_load(results_smry)
 
 library(table.glue)
 library(tidyverse)
-#> -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
-#> v ggplot2 3.3.6     v purrr   0.3.4
-#> v tibble  3.1.7     v dplyr   1.0.9
-#> v tidyr   1.2.0     v stringr 1.4.0
-#> v readr   2.1.2     v forcats 0.5.1
-#> -- Conflicts ------------------------------------------ tidyverse_conflicts() --
-#> x dplyr::filter() masks stats::filter()
-#> x dplyr::lag()    masks stats::lag()
 
 data_tbl <- results_smry %>% 
  ungroup() %>% 
@@ -56,11 +48,6 @@ data_tbl <- data_tbl %>%
 
 library(knitr)
 library(kableExtra)
-#> 
-#> Attaching package: 'kableExtra'
-#> The following object is masked from 'package:dplyr':
-#> 
-#>     group_rows
 
 kable(data_tbl,
       col.names = c('Selection method',
@@ -185,6 +172,20 @@ mindepth_medium
 </td>
 <td style="text-align:center;">
 18 (18 - 34)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vsurf
+</td>
+<td style="text-align:center;">
+3 (3 - 4)
+</td>
+<td style="text-align:center;">
+0.52 (0.52 - 0.62)
+</td>
+<td style="text-align:center;">
+133 (133 - 415)
 </td>
 </tr>
 <tr>

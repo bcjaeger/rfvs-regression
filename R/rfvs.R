@@ -12,6 +12,18 @@ rfvs_none <- function(train, formula, ...) {
 
 }
 
+rfvs_vsurf <- function(train, formula, ...) {
+
+ x <- as.matrix(select(train, -outcome))
+ y <- as.matrix(select(train, outcome))
+
+ vi <- VSURF(x = x, y = y)
+
+ colnames(x)[vi$varselect.pred]
+
+}
+
+
 rfvs_hap <- function(train, formula, ...){
 
  vi <- rfvimptest(data = train, yname = 'outcome', alpha = 0.2)

@@ -25,6 +25,7 @@ analyses <- expand_grid(
   'rfvs_mindepth_low',
   'rfvs_cif',
   'rfvs_jiang',
+  'rfvs_vsurf',
   'rfvs_hap'
  ),
  run = 25
