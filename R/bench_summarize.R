@@ -7,6 +7,7 @@
 bench_summarize <- function(bm_comb) {
 
  bm_comb %>%
+  filter(rfvs != 'hap') %>%
   group_by(rfvs) %>%
   summarise(
    across(
