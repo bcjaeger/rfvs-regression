@@ -17,9 +17,9 @@
 
 datasets_select <- function(max_miss_prop = 0,
                             min_features = 10,
-                            max_features = 100,
+                            max_features = 250,
                             min_obs = 100,
-                            max_obs = 1000,
+                            max_obs = 5000,
                             write_data = FALSE) {
 
  dataset_record <- tibble(exclusion = character(), n = integer())
@@ -101,6 +101,28 @@ datasets_select <- function(max_miss_prop = 0,
   add_row(
    exclusion = as.character(
     glue("datasets with number of observations <= {max_obs}")
+   ),
+   n = nrow(datasets)
+  )
+
+ # fri data take up a disproportionate amount of sets.
+ # reduce to include just one of these fri data sets.
+
+ datasets <- datasets[!(data.id %in% seq(581, 658))]
+
+ # using version 2 of runner data
+ datasets <- datasets[data.id != 1436]
+
+ # using version 7 of diabetes
+ datasets <- datasets[!(data.id %in% seq(41514, 41519))]
+
+ # regression autoHorse
+ datasets <- datasets[data.id != 42224]
+
+ dataset_record <- dataset_record %>%
+  add_row(
+   exclusion = as.character(
+    glue("removing overly similar datasets")
    ),
    n = nrow(datasets)
   )

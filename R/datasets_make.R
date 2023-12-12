@@ -5,10 +5,10 @@
 #' @title
 
 datasets_make <- function(max_miss_prop = 0,
-                          min_features = 20,
+                          min_features = 10,
                           max_features = 250,
-                          min_obs = 200,
-                          max_obs = 1000,
+                          min_obs = 100,
+                          max_obs = 5000,
                           write_data = FALSE) {
 
  # which datasets meet inclusion criteria

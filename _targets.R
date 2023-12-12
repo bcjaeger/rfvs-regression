@@ -21,14 +21,15 @@ analyses <- expand_grid(
   'rfvs_none',
   'rfvs_permute',
   'rfvs_mindepth_medium',
-  'rfvs_mindepth_high',
-  'rfvs_mindepth_low',
+  # 'rfvs_mindepth_high',
+  # 'rfvs_mindepth_low',
   'rfvs_cif',
   'rfvs_jiang',
-  'rfvs_vsurf',
-  'rfvs_hap'
+  # 'rfvs_vsurf',
+  'rfvs_hap',
+  "rfvs_aorsf"
  ),
- run = 25
+ run = 5
 ) %>%
  separate(col = 'dataset',
           into = c('dataset', 'outcome'),

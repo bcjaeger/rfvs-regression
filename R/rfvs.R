@@ -12,6 +12,19 @@ rfvs_none <- function(train, formula, ...) {
 
 }
 
+rfvs_aorsf <- function(train, formula, ...){
+
+
+ fit <- orsf(formula = formula, data = train, no_fit = TRUE)
+
+ data_vs <- orsf_vs(fit, n_predictor_min = 3)
+
+ best_index <- which.max(data_vs$stat_value)
+
+ data_vs$predictors_included[best_index][[1]]
+
+}
+
 rfvs_vsurf <- function(train, formula, ...) {
 
  x <- as.matrix(select(train, -outcome))

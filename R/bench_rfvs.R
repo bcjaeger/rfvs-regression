@@ -16,7 +16,8 @@ bench_rfvs <- function(dataset,
 
  fname <- as.character(glue("data/{dataset}-outcome-{outcome}.csv"))
 
- data <- fread(fname)
+ data <- fread(fname) |>
+  mutate(across(where(is.character), as.factor))
 
  # set seed for each run using the value of run, i.e., 1, ..., n_runs
  # -> same train/test split for each run within each task
@@ -30,8 +31,9 @@ bench_rfvs <- function(dataset,
   # in case we allow missing values
   step_impute_mean(all_numeric_predictors()) %>%
   step_impute_mode(all_nominal_predictors()) %>%
+  step_nzv(all_predictors()) %>%
   # sparse factor protection
-  step_novel(all_nominal_predictors()) %>%
+  step_other(all_nominal_predictors(), other = "lump_other") %>%
   step_dummy(all_nominal_predictors()) %>%
   # cast weird integer 64 types to doubles
   step_mutate(across(everything(), as.numeric)) %>%
@@ -44,9 +46,24 @@ bench_rfvs <- function(dataset,
 
  start_time <- Sys.time()
 
- vars_selected <- rfvs_fun(train = train, formula = formula) %>%
-  c("outcome") %>%
-  unique()
+ vars_selected <- try(rfvs_fun(train = train, formula = formula) %>%
+                       c("outcome") %>%
+                       unique())
+
+ if (is_error(vars_selected)) {
+  return(
+   tibble(
+    dataset = dataset,
+    outcome = outcome,
+    rfvs = rfvs_label,
+    run = run,
+    n_selected = NA_real_,
+    rmse = NA_real_,
+    rsq = NA_real_,
+    time = NA_real_
+   )
+  )
+ }
 
  end_time <- Sys.time()
 

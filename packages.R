@@ -25,6 +25,8 @@ library(rsample)
 library(ranger)
 library(rfvimptest)
 library(recipes)
+library(aorsf)
 
 conflict_prefer('filter', 'dplyr')
+
 library(rmarkdown)
