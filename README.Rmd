@@ -8,8 +8,14 @@ always_allow_html: true
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  echo = FALSE
 )
+
+library(table.glue)
+library(tidyverse)
+library(gt)
+
 ```
 
 # rfvs-regression
@@ -19,16 +25,32 @@ knitr::opts_chunk$set(
 
 The goal of rfvs-regression is to compare random forest variable selection techniques for continuous outcomes
 
+# Datasets included
+
+```{r}
+read_csv("data/datasets_inclusion_chart.csv", 
+         show_col_types = FALSE) %>% 
+ gt(rowname_col = 'exclusion') %>% 
+ tab_footnote(locations = cells_stub(rows = 8), 
+              footnote = 'Many datasets are different versions of the same data')
+```
+
 # Central illustration
 
-This will be a figure at some point, but a table will do for now.
+The experiment we ran involves three steps:
+
+1. Select variables with a given method.
+1. Fit a random forest to the data, including only selected variables.
+1. Evaluate prediction accuracy of the forest in held-out data.
+
+*Note*: We use both axis-based and oblique random forests for regression in step 2. 
+
+We assume that better variable selection leads to better prediction accuracy. Results from the experiment are below.
 
 ```{r}
 
 targets::tar_load(results_smry)
 
-library(table.glue)
-library(tidyverse)
 
 data_tbl <- results_smry %>% 
  ungroup() %>% 
@@ -37,11 +59,11 @@ data_tbl <- results_smry %>%
   across(starts_with('n_selected'), ~ as.integer(round(.x))),
   across(starts_with('time'),  ~ as.numeric(.x, units = 'secs'))
  ) %>% 
- arrange(rsq_50)
+ arrange(rsq_axis_50)
 
 tbl_vars <- c('n_selected',
-              # 'rmse', 
-              'rsq',
+              'rsq_oblique', 
+              'rsq_axis',
               'time')
 
 for(t in tbl_vars){
@@ -54,21 +76,24 @@ for(t in tbl_vars){
  
 }
 
-data_tbl <- data_tbl %>% 
- select(rfvs, all_of(tbl_vars))
-
-
-library(knitr)
-library(kableExtra)
-
-kable(data_tbl,
-      col.names = c('Selection method',
-                    'N variables selected',
-                    'R-squared',
-                    'Selection time, seconds'),
-      align = 'lccc') %>% 
- kable_styling()
-
+data_tbl %>% 
+ arrange(n_selected_50) %>% 
+ select(rfvs, all_of(tbl_vars)) %>% 
+ gt(rowname_col = 'rfvs') %>% 
+ tab_stubhead("Variable selection method") %>% 
+ cols_label(n_selected = 'N variables selected',
+            rsq_oblique = 'Oblique',
+            rsq_axis = 'Axis-based',
+            time = 'Selection time, seconds') %>% 
+ tab_spanner(columns = c("rsq_oblique", "rsq_axis"), 
+             label = "R-squared (25th %, 75th %)") %>% 
+ cols_align('center') %>% 
+ cols_align('left', columns = 'rfvs')
 
 ```
 
+*Takeaways*: 
+
+1. Using oblique forests to select variables (the `aorsf` method for variable selection) leads to a parsimonious set of predictors with high prediction accuracy. Moreover, prediction accuracy is high whether the final model is oblique or axis-based.  
+
+1. If the final model is axis-based rather than oblique, the axis-based variable selection methods do much better in terms of prediction accuracy.

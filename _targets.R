@@ -8,6 +8,12 @@ plan(callr)
 ## Load your R files
 lapply(list.files("./R", full.names = TRUE), source)
 
+bind_coerce <- function(...){
+ list(...) %>%
+  map(mutate, time = as.numeric(time)) %>%
+  bind_rows()
+}
+
 # needs to be run outside of tar_plan to avoid dynamic branching
 # datasets_make(write_data = TRUE)
 
@@ -24,12 +30,12 @@ analyses <- expand_grid(
   # 'rfvs_mindepth_high',
   # 'rfvs_mindepth_low',
   'rfvs_cif',
-  'rfvs_jiang',
+  # 'rfvs_jiang',
   # 'rfvs_vsurf',
-  'rfvs_hap',
+  # 'rfvs_hap',
   "rfvs_aorsf"
  ),
- run = 5
+ run = 1:5
 ) %>%
  separate(col = 'dataset',
           into = c('dataset', 'outcome'),
@@ -42,7 +48,7 @@ branch_resources <-
   future = tar_resources_future(resources = list(n_cores=1))
  )
 
-## tar_plan supports drake-style targets and also tar_target()
+
 tar_plan(
 
  bm <- tar_map(
@@ -52,8 +58,8 @@ tar_plan(
    bm,
    bench_rfvs(dataset = dataset,
               outcome = outcome,
-              rfvs_label = rfvs_label,
-              rfvs_fun = rfvs_fun,
+              label = rfvs_label,
+              rfvs = rfvs_fun,
               run = run),
    resources = branch_resources,
    memory = "transient",
@@ -61,7 +67,7 @@ tar_plan(
   )
  ),
 
- tar_combine(bm_comb, bm[[1]]),
+ tar_combine(bm_comb, bm[[1]], command = bind_coerce(!!!.x)),
 
  results_smry = bench_summarize(bm_comb),
 

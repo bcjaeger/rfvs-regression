@@ -7,16 +7,22 @@
 bench_summarize <- function(bm_comb) {
 
  bm_comb %>%
-  filter(rfvs != 'hap') %>%
-  group_by(rfvs) %>%
-  summarise(
+  dplyr::filter(rfvs != 'hap') %>%
+  reframe(
    across(
-    .cols = c(n_selected, rmse, rsq, time),
-    .fns = quantile, probs = c(1,2,3) / 4
-   )
+    .cols = c(n_selected,
+              rmse_axis, rsq_axis,
+              rmse_oblique, rsq_oblique,
+              time),
+    .fns = ~ quantile(.x, probs = c(1,2,3) / 4, na.rm = TRUE)
+   ),
+   quantile = c(25, 50, 75),
+   .by = rfvs
   ) %>%
-  mutate(quantile = c(25, 50, 75)) %>%
   pivot_wider(names_from = quantile,
-              values_from = c(n_selected, rmse, rsq, time))
+              values_from = c(n_selected,
+                              rmse_axis, rsq_axis,
+                              rmse_oblique, rsq_oblique,
+                              time))
 
 }

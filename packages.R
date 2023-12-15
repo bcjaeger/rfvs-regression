@@ -27,6 +27,6 @@ library(rfvimptest)
 library(recipes)
 library(aorsf)
 
-conflict_prefer('filter', 'dplyr')
+conflicts_prefer(dplyr::filter)
 
 library(rmarkdown)
