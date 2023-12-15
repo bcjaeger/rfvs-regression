@@ -28,11 +28,17 @@ The goal of rfvs-regression is to compare random forest variable selection techn
 # Datasets included
 
 ```{r}
-read_csv("data/datasets_inclusion_chart.csv", 
+
+tbl <- read_csv("data/datasets_inclusion_chart.csv", 
          show_col_types = FALSE) %>% 
  gt(rowname_col = 'exclusion') %>% 
  tab_footnote(locations = cells_stub(rows = 8), 
               footnote = 'Many datasets are different versions of the same data')
+
+gtsave(tbl, filename = 'doc/gt_readme_1.png')
+
+magick::image_read("doc/gt_readme_1.png")
+
 ```
 
 # Central illustration
@@ -76,7 +82,7 @@ for(t in tbl_vars){
  
 }
 
-data_tbl %>% 
+tbl <- data_tbl %>% 
  arrange(n_selected_50) %>% 
  select(rfvs, all_of(tbl_vars)) %>% 
  gt(rowname_col = 'rfvs') %>% 
@@ -89,6 +95,10 @@ data_tbl %>%
              label = "R-squared (25th %, 75th %)") %>% 
  cols_align('center') %>% 
  cols_align('left', columns = 'rfvs')
+
+gtsave(tbl, filename = 'doc/gt_readme_2.png')
+
+magick::image_read("doc/gt_readme_2.png")
 
 ```
 
