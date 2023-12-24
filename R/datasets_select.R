@@ -15,12 +15,13 @@
 #'  - data: data.table; openML dataset info
 #'  - record: tibble; number of datasets excluded at each step
 
-datasets_select <- function(max_miss_prop = 0,
-                            min_features = 10,
-                            max_features = 250,
-                            min_obs = 100,
-                            max_obs = 5000,
-                            write_data = FALSE) {
+datasets_select <- function(max_miss_prop,
+                            min_features,
+                            max_features,
+                            min_obs,
+                            max_obs,
+                            min_outcome_uni,
+                            write_data) {
 
  dataset_record <- tibble(exclusion = character(), n = integer())
 
@@ -45,7 +46,7 @@ datasets_select <- function(max_miss_prop = 0,
 
  dataset_record <- dataset_record %>%
   add_row(
-   exclusion = "Datasets with 'Supervised Regression' task",
+   exclusion = "With 'Supervised Regression' task",
    n = nrow(datasets)
   )
 
@@ -59,7 +60,7 @@ datasets_select <- function(max_miss_prop = 0,
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = paste0(
-    "datasets with <=", max_miss_prop * 100, "% missing observations"
+    "With <=", max_miss_prop * 100, "% missing observations"
    ),
    n = nrow(datasets)
   )
@@ -70,7 +71,7 @@ datasets_select <- function(max_miss_prop = 0,
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = as.character(
-    glue("datasets with number of features >= {min_features}")
+    glue("With number of features >= {min_features}")
    ),
    n = nrow(datasets)
   )
@@ -80,7 +81,7 @@ datasets_select <- function(max_miss_prop = 0,
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = as.character(
-    glue("datasets with number of features <= {max_features}")
+    glue("With number of features <= {max_features}")
    ),
    n = nrow(datasets)
   )
@@ -90,7 +91,7 @@ datasets_select <- function(max_miss_prop = 0,
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = as.character(
-    glue("datasets with number of observations >= {min_obs}")
+    glue("With number of observations >= {min_obs}")
    ),
    n = nrow(datasets)
   )
@@ -100,67 +101,117 @@ datasets_select <- function(max_miss_prop = 0,
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = as.character(
-    glue("datasets with number of observations <= {max_obs}")
+    glue("With number of observations <= {max_obs}")
    ),
    n = nrow(datasets)
   )
 
- # fri data take up a disproportionate amount of sets.
- # reduce to include just one of these fri data sets.
-
- datasets <- datasets[!(data.id %in% seq(581, 658))]
-
- # using version 2 of runner data
- datasets <- datasets[data.id != 1436]
-
- # using version 7 of diabetes
- datasets <- datasets[!(data.id %in% seq(41514, 41519))]
-
- # regression autoHorse
- datasets <- datasets[data.id != 42224]
+ # fri data are simulated.
+ datasets <- datasets[!(str_detect(name, "^fri\\_"))]
 
  dataset_record <- dataset_record %>%
   add_row(
    exclusion = as.character(
-    glue("removing overly similar datasets")
+    glue("Remove simulated data")
    ),
    n = nrow(datasets)
   )
 
- if(write_data){
+ # use most recent version
 
-  for(did in datasets$data.id){
+ setkey(datasets, name, version)
 
-   oml_data <- try(getOMLDataSet(data.id = did, verbosity = 0),
-                   silent = TRUE)
+ datasets <- datasets[datasets[, .I[.N], by = .(name)]$V1]
 
-   if(!is_error(oml_data)){
+ dataset_record <- dataset_record %>%
+  add_row(
+   exclusion = as.character(
+    glue("Remove redundant data versions (use most recent)")
+   ),
+   n = nrow(datasets)
+  )
 
-    outcome <- tasks[data.id == did] %>%
-     getElement('target.feature') %>%
-     unique()
+ datasets <- datasets[format != "Sparse_ARFF"]
 
-    if(!is_empty(outcome)){
+ dataset_record <- dataset_record %>%
+  add_row(
+   exclusion = as.character(
+    glue("Remove sparse ARFF data")
+   ),
+   n = nrow(datasets)
+  )
 
-     setDT(oml_data$data)
+ # kdd have many entries. Just use 1 to prevent them from having
+ # too much influence on the overall results.
 
-     for(o in outcome){
+ kdd_did <- datasets$data.id[str_detect(datasets$name, "^kdd")]
 
-      # write one file per outcome
-      # other outcome(s) can be used as a predictor for current one
-      if( length(unique(oml_data$data[[o]])) > 3 ){
+ kdd_did_drop <- kdd_did[-1]
+ kdd_rows_drop <- which(datasets$data.id %in% kdd_did_drop)
 
-       setnames(oml_data$data, old = o, new = 'outcome')
+ datasets <- datasets[-kdd_rows_drop]
 
-       fname <- paste0("data/", oml_data$desc$name, '-outcome-', o, '.csv')
+ # remove geographic_origin_of_music, but keep GeographicOriginOfMusic
+ datasets <- datasets[data.id != 44965]
 
-       if(!file.exists(fname)) fwrite(oml_data$data, fname)
+ # cpu_act and cpu_activity
+ datasets <- datasets[data.id != 44978]
 
-       setnames(oml_data$data, old = 'outcome', new = o)
+ # boston and boston_corrected (keep)
+ datasets <- datasets[data.id != 531]
 
-      }
+ # remove auto_price but keep AutoPrice
+ datasets <- datasets[data.id != 207]
 
+ dataset_record <- dataset_record %>%
+  add_row(
+   exclusion = as.character(
+    glue("Remove overly similar datasets")
+   ),
+   n = nrow(datasets)
+  )
+
+ for(did in datasets$data.id){
+
+  print(did)
+
+  oml_data <- getOMLDataSet(data.id = did, verbosity = 0)
+
+  # use max of 1 outcome per dataset
+  outcome <- tasks[data.id == did] %>%
+   getElement('target.feature') %>%
+   unique() %>%
+   .[1]
+
+  if(!is_empty(outcome)){
+
+   setDT(oml_data$data)
+
+   for(o in outcome){
+
+    # for outcomes that start with a numeric, the variable name will
+    # automatically be coerced to start with a letter, which is X
+    if(str_detect(o, pattern = "^\\d")){
+     o = paste0("X", o)
+    }
+
+    .n_uni <- length(unique(na.omit(oml_data$data[[o]])))
+
+    datasets[data.id == did, n_uni := .n_uni]
+
+    # write one file per outcome
+    # other outcome(s) can be used as a predictor for current one
+    if( .n_uni >= min_outcome_uni ){
+
+     setnames(oml_data$data, old = o, new = 'outcome')
+
+     fname <- paste0("data/", oml_data$desc$name, '-outcome-', o, '.csv')
+
+     if(write_data){
+      if(!file.exists(fname)) fwrite(oml_data$data, fname)
      }
+
+     setnames(oml_data$data, old = 'outcome', new = o)
 
     }
 
@@ -169,6 +220,16 @@ datasets_select <- function(max_miss_prop = 0,
   }
 
  }
+
+ datasets <- datasets[n_uni >= min_outcome_uni]
+
+ dataset_record <- dataset_record %>%
+  add_row(
+   exclusion = as.character(
+    table_glue("Remove data where outcome has < {min_outcome_uni} unique values")
+   ),
+   n = nrow(datasets)
+  )
 
  list(data = datasets,
       record = dataset_record)

@@ -11,7 +11,7 @@ selection techniques for continuous outcomes
 
 # Datasets included
 
-<img src="README_files/figure-gfm/unnamed-chunk-2-1.png" width="794" />
+<img src="README_files/figure-gfm/unnamed-chunk-2-1.png" width="878" />
 
 # Central illustration
 

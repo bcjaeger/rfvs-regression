@@ -58,7 +58,7 @@ We assume that better variable selection leads to better prediction accuracy. Re
 targets::tar_load(results_smry)
 
 
-data_tbl <- results_smry %>% 
+data_tbl <- results_smry$overall %>% 
  ungroup() %>% 
  mutate(
   rfvs = str_remove(rfvs, 'rfvs_'),
@@ -78,7 +78,7 @@ for(t in tbl_vars){
  t50 <- data_tbl[[paste(t, "50", sep = '_')]]
  t75 <- data_tbl[[paste(t, "75", sep = '_')]]
  
- data_tbl[[t]] <- table_glue("{t25} ({t25} - {t75})")
+ data_tbl[[t]] <- table_glue("{t50} ({t25} - {t75})")
  
 }
 

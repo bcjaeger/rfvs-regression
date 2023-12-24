@@ -4,7 +4,7 @@
 #'
 #' @title
 #' @param train training data
-#' @param outcome_colname name of the outcome column
+#' @param formula model formula
 #' @param ... not used
 rfvs_none <- function(train, formula, ...) {
 
@@ -128,7 +128,6 @@ rfvs_jiang <- function(train,
 
  mtry <- ceiling(sqrt(n_predictors))
 
-
  forest <- cforest(formula = formula,
                    data = train,
                    controls = cforest_unbiased(mtry = mtry, ntree = ntree))
@@ -168,11 +167,10 @@ rfvs_jiang <- function(train,
   if (!recompute & i > 1) selections[[i - 1]] <- selections[[i]][-i]
 
   if (recompute & i > 1){
-   selections[[i - 1]] <-
-    varimp(forest, pre1.0_0 = T) %>%
-    sort(decreasing = T) %>%
-    names() %>%
-    .[-i]
+   selections[[i - 1]] <- try(varimp(forest, pre1.0_0 = T) %>%
+                               sort(decreasing = T) %>%
+                               names() %>%
+                               .[-i])
   }
 
  }
@@ -191,7 +189,8 @@ rfvs_jiang <- function(train,
  )
 
  # subtract 1 because the errors have an additional value at the beginning
- selections[[n_optim - 1]]
+ output <- selections[[max(n_optim - 1, 1)]]
+ output
 
 }
 

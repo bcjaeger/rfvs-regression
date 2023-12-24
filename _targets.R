@@ -29,14 +29,15 @@ analyses <- expand_grid(
   'rfvs_mindepth_medium',
   # 'rfvs_mindepth_high',
   # 'rfvs_mindepth_low',
-  'rfvs_cif',
-  # 'rfvs_jiang',
+  # 'rfvs_cif',
+  'rfvs_jiang',
   # 'rfvs_vsurf',
   # 'rfvs_hap',
   "rfvs_aorsf"
  ),
- run = 1:5
+ run = 1:10
 ) %>%
+ # filter(dataset %in% c("GeographicalOriginalofMusic-outcome-V100")) %>%
  separate(col = 'dataset',
           into = c('dataset', 'outcome'),
           sep = '-outcome-') %>%

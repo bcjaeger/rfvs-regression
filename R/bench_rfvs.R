@@ -16,19 +16,7 @@ bench_rfvs <- function(dataset,
 
  fname <- as.character(glue("data/{dataset}-outcome-{outcome}.csv"))
 
- # Custom step function to scale and ensure values are greater than 0
- scale_gt_zero <- function(x) {
-  min_val <- min(x, na.rm = TRUE)
-  if (min_val <= 0) {
-   return(x + abs(min_val) + 0.001) # Add a small value to ensure > 0)
-  }
-  x
- }
-
- data <- fread(fname) %>%
-  mutate(across(where(is.numeric), scale_gt_zero))
-
-
+ data <- fread(fname)
 
  # set seed for each run using the value of run, i.e., 1, ..., n_runs
  # -> same train/test split for each run within each task
@@ -36,17 +24,21 @@ bench_rfvs <- function(dataset,
 
  split <- initial_split(data, prop = train_prop)
 
+
  formula <- outcome ~ .
 
  processor <- recipe(data, formula = formula) %>%
-  step_BoxCox(outcome, all_numeric_predictors()) %>%
   # in case we allow missing values
   step_impute_mean(all_numeric_predictors()) %>%
   step_impute_mode(all_nominal_predictors()) %>%
+  step_other(all_nominal_predictors(),
+             threshold = 0.05,
+             other = "other_recipe_cat") %>%
   # sparse factor protection
   step_novel(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
-  # cast weird integer 64 types to doubles
+  step_lincomb(all_numeric_predictors()) %>%
+  # cast integer 64 types to doubles
   step_mutate(across(everything(), as.numeric)) %>%
   step_nzv(all_predictors()) %>%
   prep(training = training(split))
@@ -58,9 +50,13 @@ bench_rfvs <- function(dataset,
 
  start_time <- Sys.time()
 
- vars_selected <- rfvs(train = train, formula = formula) %>%
-  c("outcome") %>%
-  unique()
+ vars_selected <- try(
+  rfvs(train = train, formula = formula) %>%
+   c("outcome") %>%
+   unique()
+ )
+
+ if(is_error(vars_selected)) browser()
 
  end_time <- Sys.time()
 
@@ -70,10 +66,10 @@ bench_rfvs <- function(dataset,
  # fit <- rfsrc(outcome ~ .,
  #              data = as.data.frame(train[, vars_selected]))
 
- fit_axis <- try(ranger(outcome ~ ., data = train[, vars_selected]))
- fit_oblique <- try(orsf(train[, vars_selected], outcome ~ .))
 
- if(is_error(fit_axis) || is_error(fit_oblique)) browser()
+ fit_axis <- ranger(outcome ~ ., data = train[, vars_selected])
+
+ fit_oblique <- orsf(train[, vars_selected], outcome ~ .)
 
  pred_axis <- fit_axis %>%
   predict(data = as.data.frame(test[, vars_selected])) %>%
@@ -82,6 +78,15 @@ bench_rfvs <- function(dataset,
  pred_oblique <- fit_oblique %>%
   predict(new_data = as.data.frame(test[, vars_selected])) %>%
   as.numeric()
+
+ rsq_obi = eval_rsq(pred_oblique, test$outcome)
+ rsq_axi = eval_rsq(pred_axis, test$outcome)
+
+ print(
+  table_glue(
+   "{dataset} ({label}) -- {rsq_obi-rsq_axi}"
+  )
+ )
 
  tibble(
   dataset = dataset,
@@ -95,6 +100,7 @@ bench_rfvs <- function(dataset,
   rsq_oblique = eval_rsq(pred_oblique, test$outcome),
   time = end_time - start_time
  )
+
 
 
 }
