@@ -29,13 +29,22 @@ accuracy. Results from the experiment are below.
 
 <img src="README_files/figure-gfm/unnamed-chunk-3-1.png" width="1564" />
 
+Similar results, but using mean and standard error
+
+<img src="README_files/figure-gfm/unnamed-chunk-4-1.png" width="1396" />
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
 *Takeaways*:
 
-1.  Using oblique forests to select variables (the `aorsf` method for
-    variable selection) leads to a parsimonious set of predictors with
-    high prediction accuracy. Moreover, prediction accuracy is high
-    whether the final model is oblique or axis-based.
+1.  Variable selection method `jiang` has consistently high prediction
+    accuracy but scales poorly to large datasets in terms of
+    computational efficiency. E.g., the max time that this method
+    required was 2 days, 23 hours, 40 minutes, 9 seconds
 
-2.  If the final model is axis-based rather than oblique, the axis-based
-    variable selection methods do much better in terms of prediction
-    accuracy.
+2.  Variable selection method `aorsf` has very high prediction accuracy
+    when the downstream model is an oblique random forest, and does not
+    become computationally intractable with larger data. E.g., the max
+    time this method required was 1 hour, 18 minutes, 26 seconds

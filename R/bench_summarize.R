@@ -44,7 +44,7 @@ bench_summarize <- function(bm_comb) {
   group_by(rfvs) %>%
   summarize(across(.cols = all_of(smry_cols),
                    .fns = list(mean = ~ mean(.x, na.rm = TRUE),
-                               se = ~ sd(.x) / (length(.x) - 1))))
+                               se = ~ sd(.x) / sqrt((length(.x) - 1)))))
 
  quants <- bm_comb %>%
   reframe(

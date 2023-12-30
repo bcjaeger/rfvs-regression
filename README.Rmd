@@ -9,7 +9,9 @@ always_allow_html: true
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
 )
 
 library(table.glue)
@@ -85,14 +87,14 @@ for(t in tbl_vars){
 tbl <- data_tbl %>% 
  arrange(n_selected_50) %>% 
  select(rfvs, all_of(tbl_vars)) %>% 
- gt(rowname_col = 'rfvs') %>% 
+ gt(rowname_col = 'rfvs', caption = "Table values present the median (25th percentile, 75th percentile).") %>% 
  tab_stubhead("Variable selection method") %>% 
  cols_label(n_selected = 'N variables selected',
             rsq_oblique = 'Oblique',
             rsq_axis = 'Axis-based',
             time = 'Selection time, seconds') %>% 
  tab_spanner(columns = c("rsq_oblique", "rsq_axis"), 
-             label = "R-squared (25th %, 75th %)") %>% 
+             label = "R-squared") %>% 
  cols_align('center') %>% 
  cols_align('left', columns = 'rfvs')
 
@@ -102,8 +104,111 @@ magick::image_read("doc/gt_readme_2.png")
 
 ```
 
+
+Similar results, but using mean and standard error
+
+```{r}
+
+data_tbl <- results_smry$overall %>% 
+ ungroup() %>% 
+ mutate(
+  rfvs = str_remove(rfvs, 'rfvs_'),
+  across(starts_with('time'),  ~ as.numeric(.x, units = 'secs'))
+ ) %>% 
+ arrange(rsq_axis_mean)
+
+tbl_vars <- c('n_selected',
+              'rsq_oblique', 
+              'rsq_axis',
+              'time')
+
+for(t in tbl_vars){
+ 
+ .m <- data_tbl[[paste(t, "mean", sep = '_')]]
+ .se <- data_tbl[[paste(t, "se", sep = '_')]]
+ 
+ data_tbl[[t]] <- table_glue("{.m} ({.se})")
+ 
+}
+
+tbl <- data_tbl %>% 
+ arrange(n_selected_mean) %>% 
+ select(rfvs, all_of(tbl_vars)) %>% 
+ gt(rowname_col = 'rfvs', caption = "Table values are mean (standard error).") %>% 
+ tab_stubhead("Variable selection method") %>% 
+ cols_label(n_selected = 'N variables selected',
+            rsq_oblique = 'Oblique',
+            rsq_axis = 'Axis-based',
+            time = 'Selection time, seconds') %>% 
+ tab_spanner(columns = c("rsq_oblique", "rsq_axis"), 
+             label = "R-Squared") %>% 
+ cols_align('center') %>% 
+ cols_align('left', columns = 'rfvs')
+
+gtsave(tbl, filename = 'doc/gt_readme_3.png')
+
+magick::image_read("doc/gt_readme_3.png")
+
+```
+
+
+```{r}
+
+meta <- data.table::fread("data/datasets_included.csv") %>% 
+ transmute(dataset = name, 
+           n_obs = number.of.instances,
+           p_uni = n_uni / n_obs, 
+           n_col = number.of.features, 
+           p_col_catg = number.of.symbolic.features / n_col,
+           p_col_ctns = number.of.numeric.features / n_col,
+           p_miss = miss_prop)
+
+targets::tar_load(bm_comb)
+
+data_model <- left_join(bm_comb, meta) %>% 
+ select(-outcome, -run, -n_selected, -starts_with("rmse"))
+
+# library(lme4)
+# library(lmerTest)
+# 
+# fit <- lmerTest::lmer(rsq_oblique ~ 0 + rfvs*log(n_obs) + (1|dataset), 
+#                       data = data_model)
+# 
+# summary(fit)
+# 
+# anova(fit)
+
+data_model %>% 
+ filter(rfvs != "none") %>% 
+ mutate(rfvs = fct_reorder(rfvs, .x = time, .fun = median)) %>% 
+ ggplot() + 
+ aes(x = rfvs, y = time) + 
+ geom_boxplot() + 
+ scale_y_log10() + 
+ labs(y = "time to select variables, seconds",
+      title = 'Computational efficiency of variable selection methods')
+
+```
+
+
+
+```{r}
+
+data_model %>%
+ pivot_longer(starts_with("rsq")) %>% 
+ mutate(rfvs = fct_reorder(rfvs, .x = value, .fun = median)) %>% 
+ ggplot() + 
+ aes(x = rfvs, y = value, fill = name) + 
+ geom_boxplot(outlier.shape = NA) + 
+ scale_y_continuous(limits = c(0,1)) +
+ labs(y = "R-squared of downstream model",
+      title = 'Prediction accuracy based on variable selection methods')
+
+```
+
+
 *Takeaways*: 
 
-1. Using oblique forests to select variables (the `aorsf` method for variable selection) leads to a parsimonious set of predictors with high prediction accuracy. Moreover, prediction accuracy is high whether the final model is oblique or axis-based.  
+1. Variable selection method `jiang` has consistently high prediction accuracy but scales poorly to large datasets in terms of computational efficiency. E.g., the max time that this method required was `r aorsf:::beautifyTime(round(max(data_model$time[data_model$rfvs=='jiang'])))`
 
-1. If the final model is axis-based rather than oblique, the axis-based variable selection methods do much better in terms of prediction accuracy.
+1. Variable selection method `aorsf` has very high prediction accuracy when the downstream model is an oblique random forest, and does not become computationally intractable with larger data. E.g., the max time this method required was `r aorsf:::beautifyTime(round(max(data_model$time[data_model$rfvs=='aorsf'])))`

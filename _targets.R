@@ -10,7 +10,7 @@ lapply(list.files("./R", full.names = TRUE), source)
 
 bind_coerce <- function(...){
  list(...) %>%
-  map(mutate, time = as.numeric(time)) %>%
+  map(mutate, time = as.numeric(time, units='secs')) %>%
   bind_rows()
 }
 
