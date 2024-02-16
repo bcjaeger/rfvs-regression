@@ -15,9 +15,12 @@ rfvs_none <- function(train, formula, ...) {
 rfvs_aorsf <- function(train, formula, ...){
 
 
- fit <- orsf(formula = formula, data = train, no_fit = TRUE)
+ fit <- orsf(formula = formula,
+             data = train,
+             importance = 'permute',
+             no_fit = TRUE)
 
- data_vs <- orsf_vs(fit, n_predictor_min = 3)
+ data_vs <- orsf_vs(fit, n_predictor_min = 2)
 
  best_index <- which.max(data_vs$stat_value)
 
@@ -39,7 +42,8 @@ rfvs_vsurf <- function(train, formula, ...) {
 
 rfvs_hap <- function(train, formula, ...){
 
- vi <- rfvimptest(data = train, yname = 'outcome', alpha = 0.2)
+ vi <- rfvimptest(data = train, yname = 'outcome',
+                  type = 'SAPT', alpha = 0.2)
 
  if(all(vi$testres == 'keep H0')){
 
@@ -194,5 +198,94 @@ rfvs_jiang <- function(train,
 
 }
 
+### Svetnik
+rf_svetnik <- function(train, formula, ...){
+
+ #extract Y and X from formula
+ yvar <- as.character(formula[[2]])
+ Y <- train[,yvar]
+ X <- train[!names(train) %in% yvar]
+
+ #define tuning parameters for Svetnik method
+ ntree=100
+ folds=5
+ repetitions=20
+
+ # Run Svetnik method
+ mtry <- ceiling(sqrt(ncol(X))) # automatically set mtry to sqrt(p)
+ dat <- cbind(Y, X) # create the data
+ names(dat) <- c("response", paste("V", 1:ncol(X), sep = ""))
+
+ forest <- cforest(response ~ ., data = dat, # fit a forest
+                   controls = cforest_unbiased(mtry = mtry, ntree = ntree))
+ final.imps <- names(sort(varimp(forest, pre1.0_0 = T), decreasing = T)) # the final sequence
+ errors <- array(NA, dim = c(repetitions, ncol(X) + 1, folds))
+
+ for (x in 1:repetitions) { # repeatedly produce results of several...
+  samps <- sample(rep(1:folds, length = nrow(X)))
+  for (k in 1:folds) { # ...crossvalidations
+   train <- dat[samps != k, ]; test <- dat[samps == k, ] # train and test data
+   forest <- cforest(response ~ ., data = train, # fit a forest
+                     controls = cforest_unbiased(mtry = mtry, ntree = ntree))
+   selection <- names(sort(varimp(forest, pre1.0_0 = T), decreasing = T))
+   for (i in ncol(X):1) { # do backward rejection steps
+    mtry <- min(mtry, ceiling(sqrt(i)))
+    forest <- cforest(as.formula(paste("response", paste(selection[1:i],
+                                                         collapse = " + "), sep = " ~ ")), data = train,
+                      controls = cforest_unbiased(mtry = mtry, ntree = ntree))
+    errors[x, i + 1, k] <- mean((as.numeric(as.character(test$response)) -
+                                  as.numeric(as.character(predict(forest, newdata = test))))^2)}
+   errors[x, 1, k] <- mean((as.numeric(as.character(test$response)) -
+                             ifelse(all(Y %in% 0:1), round(mean(as.numeric(
+                              as.character(train$response)))), mean(train$response)))^2)}}
+ mean.errors <- sapply(1:(ncol(X) + 1), function(x) mean(errors[, x, ]))
+ optimum.number <- which.min(mean.errors)   # optimal number of variables
+ if (optimum.number == 1) { # determine the final forest, selection and OBB-error
+  forest <- c(); selection <- c()
+ }
+ if (optimum.number != 1) {
+  selection <- final.imps[1:(optimum.number - 1)]
+  forest <- cforest(as.formula(paste("response", paste(selection,
+                                                       collapse = " + "), sep = " ~ ")), data = dat,
+                    controls = cforest_unbiased(mtry = mtry, ntree = ntree))
+
+ }
+
+ #Extract Variables selected
+ names(X)[as.numeric(gsub("V", "", selection))]
+
+}
 
 
+### RRF regularized RF
+rfvs_rrf <- function(train, formula, ...){
+
+ yvar <- as.character(formula[[2]])
+
+ y <- train[[yvar]]
+ x <- train %>%
+  select(-all_of(yvar)) %>%
+  as.matrix()
+
+ rrf<- RRF(x=x, y=y)
+ colnames(x)[rrf$feaSet]
+}
+
+### Caret package/recursive feature elimination
+rfvs_caret <- function(train, formula, ...){
+
+ yvar <- as.character(formula[[2]])
+
+ y <- train[[yvar]]
+ x <- train %>%
+  select(-all_of(yvar)) %>%
+  as.matrix()
+
+
+ caret <- rfe(x = x, y = y,
+              sizes = seq(from = 1, to = ncol(x), by = 1),
+              rfeControl = rfeControl(functions = rfFuncs))
+
+ predictors(caret)
+
+}

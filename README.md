@@ -27,7 +27,7 @@ in step 2.
 We assume that better variable selection leads to better prediction
 accuracy. Results from the experiment are below.
 
-<img src="README_files/figure-gfm/unnamed-chunk-3-1.png" width="1564" />
+<img src="README_files/figure-gfm/unnamed-chunk-3-1.png" width="1590" />
 
 Similar results, but using mean and standard error
 
@@ -42,9 +42,9 @@ Similar results, but using mean and standard error
 1.  Variable selection method `jiang` has consistently high prediction
     accuracy but scales poorly to large datasets in terms of
     computational efficiency. E.g., the max time that this method
-    required was 2 days, 23 hours, 40 minutes, 9 seconds
+    required was 7 minutes, 1 seconds
 
 2.  Variable selection method `aorsf` has very high prediction accuracy
     when the downstream model is an oblique random forest, and does not
     become computationally intractable with larger data. E.g., the max
-    time this method required was 1 hour, 18 minutes, 26 seconds
+    time this method required was 29 seconds

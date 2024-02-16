@@ -18,6 +18,20 @@ bench_rfvs <- function(dataset,
 
  data <- fread(fname)
 
+ if(nrow(data) > 1000){
+  set.seed(329)
+  subset_index <- sample(nrow(data), 1000, replace = FALSE)
+  data <- data[subset_index, ]
+ }
+
+ if(ncol(data) > 75){
+  set.seed(730)
+  subset_index <- names(data)[sample(ncol(data), 75, replace = FALSE)] %>%
+   c("outcome") %>%
+   unique()
+  data <- select(data, all_of(subset_index))
+ }
+
  # set seed for each run using the value of run, i.e., 1, ..., n_runs
  # -> same train/test split for each run within each task
  set.seed(run)
@@ -82,11 +96,11 @@ bench_rfvs <- function(dataset,
  rsq_obi = eval_rsq(pred_oblique, test$outcome)
  rsq_axi = eval_rsq(pred_axis, test$outcome)
 
- print(
-  table_glue(
-   "{dataset} ({label}) -- {rsq_obi-rsq_axi}"
-  )
- )
+ # print(
+ #  table_glue(
+ #   "{dataset} ({label}) -- {rsq_obi-rsq_axi}"
+ #  )
+ # )
 
  tibble(
   dataset = dataset,
