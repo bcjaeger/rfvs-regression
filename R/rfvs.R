@@ -42,8 +42,13 @@ rfvs_vsurf <- function(train, formula, ...) {
 
 rfvs_hap <- function(train, formula, ...){
 
- vi <- rfvimptest(data = train, yname = 'outcome',
-                  type = 'SAPT', alpha = 0.2)
+ vi <- rfvimptest(data = train,
+                  yname = 'outcome',
+                  type = 'SAPT',
+                  p0 = 0.4,
+                  condinf = TRUE,
+                  progressbar = FALSE,
+                  test = 'twosample')
 
  if(all(vi$testres == 'keep H0')){
 
@@ -198,61 +203,74 @@ rfvs_jiang <- function(train,
 
 }
 
-### Svetnik
-rf_svetnik <- function(train, formula, ...){
+rfvs_svetnik <- function(train,
+                         formula,
+                         ntree = 100,
+                         folds = 5,
+                         repetitions = 20,
+                         ...){
 
- #extract Y and X from formula
- yvar <- as.character(formula[[2]])
- Y <- train[,yvar]
- X <- train[!names(train) %in% yvar]
+ mtry <- ceiling(sqrt(ncol(train)-1)) # automatically set mtry to sqrt(p)
 
- #define tuning parameters for Svetnik method
- ntree=100
- folds=5
- repetitions=20
-
- # Run Svetnik method
- mtry <- ceiling(sqrt(ncol(X))) # automatically set mtry to sqrt(p)
- dat <- cbind(Y, X) # create the data
- names(dat) <- c("response", paste("V", 1:ncol(X), sep = ""))
-
- forest <- cforest(response ~ ., data = dat, # fit a forest
+ forest <- cforest(outcome ~ .,
+                   data = train,
+                   # fit a forest
                    controls = cforest_unbiased(mtry = mtry, ntree = ntree))
- final.imps <- names(sort(varimp(forest, pre1.0_0 = T), decreasing = T)) # the final sequence
- errors <- array(NA, dim = c(repetitions, ncol(X) + 1, folds))
+ final.imps <-
+  names(sort(varimp(forest, pre1.0_0 = T), decreasing = T)) # the final sequence
 
- for (x in 1:repetitions) { # repeatedly produce results of several...
-  samps <- sample(rep(1:folds, length = nrow(X)))
-  for (k in 1:folds) { # ...crossvalidations
-   train <- dat[samps != k, ]; test <- dat[samps == k, ] # train and test data
-   forest <- cforest(response ~ ., data = train, # fit a forest
+ errors <- array(NA, dim = c(repetitions, ncol(train), folds))
+
+ for (x in 1:repetitions) {
+
+  samps <- sample(rep(1:folds, length = nrow(train)))
+
+  # cross validation
+  for (k in seq(folds)) {
+
+   .train <- train[samps != k,]
+   .test <- train[samps == k,]
+
+   forest <- cforest(outcome ~ .,
+                     data = .train,
                      controls = cforest_unbiased(mtry = mtry, ntree = ntree))
+
    selection <- names(sort(varimp(forest, pre1.0_0 = T), decreasing = T))
-   for (i in ncol(X):1) { # do backward rejection steps
+
+   # do backward rejection steps
+   for (i in seq(length(selection), 1)) {
+
     mtry <- min(mtry, ceiling(sqrt(i)))
-    forest <- cforest(as.formula(paste("response", paste(selection[1:i],
-                                                         collapse = " + "), sep = " ~ ")), data = train,
-                      controls = cforest_unbiased(mtry = mtry, ntree = ntree))
-    errors[x, i + 1, k] <- mean((as.numeric(as.character(test$response)) -
-                                  as.numeric(as.character(predict(forest, newdata = test))))^2)}
-   errors[x, 1, k] <- mean((as.numeric(as.character(test$response)) -
-                             ifelse(all(Y %in% 0:1), round(mean(as.numeric(
-                              as.character(train$response)))), mean(train$response)))^2)}}
- mean.errors <- sapply(1:(ncol(X) + 1), function(x) mean(errors[, x, ]))
- optimum.number <- which.min(mean.errors)   # optimal number of variables
- if (optimum.number == 1) { # determine the final forest, selection and OBB-error
-  forest <- c(); selection <- c()
- }
- if (optimum.number != 1) {
-  selection <- final.imps[1:(optimum.number - 1)]
-  forest <- cforest(as.formula(paste("response", paste(selection,
-                                                       collapse = " + "), sep = " ~ ")), data = dat,
-                    controls = cforest_unbiased(mtry = mtry, ntree = ntree))
 
+    f_backward <- paste(
+     "outcome", paste(selection[1:i], collapse = " + "), sep = " ~ "
+    )
+
+    forest <-
+     cforest(
+      formula = as.formula(f_backward),
+      data = .train,
+      controls = cforest_unbiased(mtry = mtry, ntree = ntree)
+     )
+
+    errors[x, i + 1, k] <-
+     mean((.test$outcome - predict(forest, newdata = .test)) ^ 2)
+
+   }
+   errors[x, 1, k] <- mean((.test$outcome - mean(.train$outcome)) ^ 2)
+  }
  }
 
- #Extract Variables selected
- names(X)[as.numeric(gsub("V", "", selection))]
+ mean.errors <- sapply(seq(ncol(train)), function(x) mean(errors[, x,]))
+
+ # optimal number of variables
+ optimum.number <- which.min(mean.errors)
+
+ if (optimum.number == 1) {
+  return(final.imps[1])
+ }
+
+ return(final.imps[seq(optimum.number-1)])
 
 }
 
