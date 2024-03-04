@@ -33,9 +33,24 @@ rfvs_vsurf <- function(train, formula, ...) {
  x <- as.matrix(select(train, -outcome))
  y <- as.matrix(select(train, outcome))
 
- vi <- VSURF(x = x, y = y)
+ vi <- suppressWarnings(VSURF(x = x, y = y))
 
- colnames(x)[vi$varselect.pred]
+ out <- colnames(x)[vi$varselect.pred]
+
+ if(is_empty(out)){
+  out <- colnames(x)[vi$varselect.interp]
+ }
+
+ if(is_empty(out)){
+  out <- colnames(x)[vi$varselect.thres]
+ }
+
+ if(is_empty(out)){
+  # go with most important variable if all else fails
+  out <- rfvs_permute(train, formula)[1]
+ }
+
+ out
 
 }
 
@@ -305,5 +320,48 @@ rfvs_caret <- function(train, formula, ...){
               rfeControl = rfeControl(functions = rfFuncs))
 
  predictors(caret)
+
+}
+
+rfvs_boruta <- function(train, formula,...){
+
+ boruta <- Boruta::Boruta(formula, data = train)
+
+ confirmed <- which(boruta$finalDecision == 'Confirmed')
+ tentative <- which(boruta$finalDecision == "Tentative")
+
+ if(!is_empty(confirmed)){
+  return(names(boruta$finalDecision)[confirmed])
+ }
+
+ if(!is_empty(tentative)){
+  return(names(boruta$finalDecision)[tentative])
+ }
+
+ # if it rejects everything, use standard importance to pick just 1
+ rfvs_permute(train, formula)[1]
+
+}
+
+rfvs_alt <- function(train, formula, ...){
+
+ fit <- randomForest(formula, train, importance = TRUE)
+
+ yvar <- as.character(formula[[2]])
+
+ y <- train[[yvar]]
+ x <- train %>%
+  select(-all_of(yvar)) %>%
+  as.matrix()
+
+ pvals <- PimpTest(PIMP(x, y, fit))
+
+ out <- rownames(pvals$pvalue)[pvals$pvalue < 0.05]
+
+ if(is_empty(out)){
+  out <- rownames(pvals$pvalue)[which.min(pvals$pvalue)]
+ }
+
+ out
 
 }

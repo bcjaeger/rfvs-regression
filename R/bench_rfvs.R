@@ -18,26 +18,25 @@ bench_rfvs <- function(dataset,
 
  data <- fread(fname)
 
- if(nrow(data) > 1000){
-  set.seed(329)
-  subset_index <- sample(nrow(data), 1000, replace = FALSE)
+ set.seed(run)
+
+ if(nrow(data) > 5000){
+
+  subset_index <- sample(nrow(data), 5000, replace = FALSE)
   data <- data[subset_index, ]
+
  }
 
- if(ncol(data) > 75){
-  set.seed(730)
-  subset_index <- names(data)[sample(ncol(data), 75, replace = FALSE)] %>%
+ if(ncol(data) > 250){
+
+  subset_index <- names(data)[sample(ncol(data), 250, replace = FALSE)] %>%
    c("outcome") %>%
    unique()
   data <- select(data, all_of(subset_index))
+
  }
 
- # set seed for each run using the value of run, i.e., 1, ..., n_runs
- # -> same train/test split for each run within each task
- set.seed(run)
-
  split <- initial_split(data, prop = train_prop)
-
 
  formula <- outcome ~ .
 
@@ -74,13 +73,6 @@ bench_rfvs <- function(dataset,
 
  end_time <- Sys.time()
 
- # fit a final model to the training data
- # using the .. prefix to select columns from a data.table
-
- # fit <- rfsrc(outcome ~ .,
- #              data = as.data.frame(train[, vars_selected]))
-
-
  fit_axis <- ranger(outcome ~ ., data = train[, vars_selected])
 
  fit_oblique <- orsf(train[, vars_selected], outcome ~ .)
@@ -96,17 +88,13 @@ bench_rfvs <- function(dataset,
  rsq_obi = eval_rsq(pred_oblique, test$outcome)
  rsq_axi = eval_rsq(pred_axis, test$outcome)
 
- # print(
- #  table_glue(
- #   "{dataset} ({label}) -- {rsq_obi-rsq_axi}"
- #  )
- # )
-
  tibble(
   dataset = dataset,
   outcome = outcome,
   rfvs = label,
   run = run,
+  n_row = nrow(train),
+  n_col = ncol(train),
   n_selected = length(vars_selected) - 1,
   rmse_axis = eval_rmse(pred_axis, test$outcome),
   rsq_axis = eval_rsq(pred_axis, test$outcome),
