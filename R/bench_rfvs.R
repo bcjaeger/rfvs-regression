@@ -12,7 +12,7 @@ bench_rfvs <- function(dataset,
                        label,
                        rfvs,
                        run,
-                       train_prop = 1/2) {
+                       train_prop = NULL) {
 
  fname <- as.character(glue("data/{dataset}-outcome-{outcome}.csv"))
 
@@ -20,19 +20,22 @@ bench_rfvs <- function(dataset,
 
  set.seed(run)
 
- if(nrow(data) > 5000){
+ if(ncol(data) > 150){
 
-  subset_index <- sample(nrow(data), 5000, replace = FALSE)
-  data <- data[subset_index, ]
-
- }
-
- if(ncol(data) > 250){
-
-  subset_index <- names(data)[sample(ncol(data), 250, replace = FALSE)] %>%
+  subset_index <- names(data)[sample(ncol(data), 150, replace = FALSE)] %>%
    c("outcome") %>%
    unique()
   data <- select(data, all_of(subset_index))
+
+ }
+
+ if(is.null(train_prop)){
+
+  if(nrow(data) > 1000){
+   train_prop = 500 / nrow(data)
+  } else {
+   train_prop <- 1/2
+  }
 
  }
 

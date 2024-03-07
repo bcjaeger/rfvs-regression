@@ -27,6 +27,7 @@ library(rfvimptest)
 library(recipes)
 library(aorsf)
 library(table.glue)
+library(randomForest)
 
 conflicts_prefer(dplyr::filter)
 conflicts_prefer(future::run)
