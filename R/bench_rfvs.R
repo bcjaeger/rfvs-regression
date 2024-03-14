@@ -31,8 +31,8 @@ bench_rfvs <- function(dataset,
 
  if(is.null(train_prop)){
 
-  if(nrow(data) > 1000){
-   train_prop = 500 / nrow(data)
+  if(nrow(data) > 2000){
+   train_prop = 1000 / nrow(data)
   } else {
    train_prop <- 1/2
   }

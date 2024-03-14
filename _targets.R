@@ -38,7 +38,9 @@ analyses <- expand_grid(
   'rfvs_svetnik',
   'rfvs_boruta',
   "rfvs_alt",
-  "rfvs_aorsf"
+  "rfvs_aorsf",
+  "rfvs_negate",
+  "rfvs_anova"
  ),
  run = 1:3
 ) %>%
@@ -73,7 +75,7 @@ tar_plan(
   )
  ),
 
- tar_combine(bm_comb, bm[[1]], command = bind_coerce(!!!.x)),
+ tar_combine(bm_comb, bm[[1]]),
 
  results_smry = bench_summarize(bm_comb),
 

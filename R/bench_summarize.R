@@ -13,6 +13,9 @@ bench_summarize <- function(bm_comb) {
                 "rsq_oblique",
                 "time")
 
+ bm_comb <- bm_comb %>%
+  mutate(time = as.numeric(time, units = 'secs'))
+
  # summary for each dataset ----
 
  mean_se <- bm_comb %>%
