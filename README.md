@@ -36,15 +36,3 @@ Similar results, but using mean and standard error
 ![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-*Takeaways*:
-
-1.  Variable selection method `jiang` has consistently high prediction
-    accuracy but scales poorly to large datasets in terms of
-    computational efficiency. E.g., the max time that this method
-    required was 44 minutes, 14 seconds
-
-2.  Variable selection method `aorsf` has very high prediction accuracy
-    when the downstream model is an oblique random forest, and does not
-    become computationally intractable with larger data. E.g., the max
-    time this method required was 2 minutes, 38 seconds

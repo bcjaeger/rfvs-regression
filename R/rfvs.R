@@ -93,14 +93,13 @@ rfvs_hap <- function(train, formula, ...){
  vi <- rfvimptest(data = train,
                   yname = 'outcome',
                   type = 'SAPT',
-                  p0 = 0.4,
-                  condinf = TRUE,
-                  progressbar = FALSE,
-                  test = 'twosample')
+                  progressbar = FALSE)
 
  if(all(vi$testres == 'keep H0')){
 
-  return(names(sort(vi$perms, decreasing = TRUE))[1])
+  return(
+   names(sort(vi$varimp, decreasing = TRUE))[1]
+  )
 
  }
 
