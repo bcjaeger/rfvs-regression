@@ -1,5 +1,6 @@
 ## Load your packages, e.g. library(targets).
 source("./packages.R")
+#Nate is co-first author of this work
 
 library(future)
 library(future.callr)
