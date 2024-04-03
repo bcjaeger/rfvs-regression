@@ -17,7 +17,7 @@ bind_coerce <- function(...){
 }
 
 # needs to be run outside of tar_plan to avoid dynamic branching
-# datasets_make(write_data = TRUE)
+#datasets_make(write_data = TRUE)
 
 # if you don't need to update the tasks, just load them
 datasets_included <- list.files('data', pattern = "-outcome-") %>%
@@ -79,8 +79,30 @@ tar_plan(
 
  tar_combine(bm_comb, bm[[1]]),
 
+ ##### Create Summary Data set #####
  results_smry = bench_summarize(bm_comb),
+
+ #### Create Summary Data Set Z-scores ####
+ results_z = bench_standardize(bm_comb, ignore=c("hap")),
+
+ ###### Datasets summary ##########
+ # requires folder 'data/' created above using datasets_make()
+ datasets_cv = datasets_cv(), #calculates coeficcient of variation of each data set
+ datasets_full = datasets_full(datasets_cv), #appends datasets_cv to datasets_selected
+
+ #dataset summary figure. Requires "grid.arrange(fig_datasets_smry)
+ fig_datasets_smry = vis_datasets_smry(datasets_full),
+
+ ###### Results Summary ##########
+
+ # Distribution plots
+
+ # Mean and Median R-square by Forest Type
+ fig_rsq_median = vis_rsq_median(results_smry, exclude.hap=T, exclude.none = F),
+ fig_rsq_means = vis_rsq_means(results_smry, exclude.hap=T, exclude.none = F),
 
  tar_render(readme, "README.Rmd")
 
 )
+
+

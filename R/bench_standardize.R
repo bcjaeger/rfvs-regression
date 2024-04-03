@@ -1,13 +1,30 @@
-#' .. content for \description{} (no empty lines) ..
-#'
-#' .. content for \details{} ..
-#'
-#' @title
-#' @param results
-bench_summarize <- function(bm_comb) {
+
+#Function creates z-scores for for each dataset across methods and iterations, and then averages them
+# ignore is a vector of methods to ignore in computing z-scores
+
+bench_standardize <- function(bm_comb, ignore=NULL){
+
+ #create new var with label names for method
+ lab_names <- c("Altman", "Menze", "Permute -\nOblique", "Boruta", "CARET", "Hapfelmeier", "Jiang", "Min Depth \nMedium",
+                "Negation", "None", "Permute - \nAxis", "RRF", "Svetnik", "VSURF")
+ bm_comb$method <- factor(bm_comb$rfvs, levels(factor(bm_comb$rfvs)), lab_names)
+
+ #exclude methods if specified
+ if(is.null(ignore)==F){
+  bm_comb <- bm_comb[bm_comb$rfvs %in% ignore==F,]
+ }
 
  bm_comb <- bm_comb %>% mutate(perc_reduced = 1-n_selected/(n_col-1),
                                log_time = log(as.numeric(time)))
+
+ #define columns to standardize
+ z_cols <- c("rsq_axis", "rsq_oblique",
+             "time","log_time", "perc_reduced")
+
+ #standardize columns
+ bm_comb <- bm_comb %>%
+  group_by(dataset,run) %>% mutate(across(.cols = all_of(z_cols),
+                                          .fns = list(z = ~scale(.x)[,1]))) %>% ungroup()
 
  smry_cols <- c("n_selected",
                 "perc_reduced",
@@ -15,7 +32,7 @@ bench_summarize <- function(bm_comb) {
                 "rsq_axis",
                 "rmse_oblique",
                 "rsq_oblique",
-                "time", "log_time" )
+                "time", "log_time")
 
  bm_comb <- bm_comb %>%
   mutate(time = as.numeric(time, units = 'secs'))
@@ -46,34 +63,7 @@ bench_summarize <- function(bm_comb) {
 
  smry_by_data <- left_join(mean_se, quants)
 
- # summary overall -----
-
- mean_se <- bm_comb %>%
-  group_by(rfvs) %>%
-  summarize(across(.cols = all_of(smry_cols),
-                   .fns = list(mean = ~ mean(.x, na.rm = TRUE),
-                               se = ~ sd(.x) / sqrt((length(.x) - 1)))))
-
- quants <- bm_comb %>%
-  reframe(
-   across(
-    .cols = c(n_selected, perc_reduced,
-              rmse_axis, rsq_axis,
-              rmse_oblique, rsq_oblique,
-              time, log_time),
-    .fns = ~ quantile(.x, probs = c(1,2,3) / 4, na.rm = TRUE)
-   ),
-   quantile = c(25, 50, 75),
-   .by = c(rfvs)
-  ) %>%
-  pivot_wider(names_from = quantile,
-              values_from = all_of(smry_cols))
-
- smry_overall <- left_join(mean_se, quants) %>%
-  mutate(dataset = 'overall', .after = rfvs)
-
- list(by_data = smry_by_data,
-      overall = smry_overall)
-
+ as.data.frame(smry_by_data)
 }
+
 
