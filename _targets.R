@@ -10,12 +10,6 @@ plan(callr)
 ## Load your R files
 lapply(list.files("./R", full.names = TRUE), source)
 
-bind_coerce <- function(...){
- list(...) %>%
-  map(mutate, time = as.numeric(time, units='secs')) %>%
-  bind_rows()
-}
-
 # needs to be run outside of tar_plan to avoid dynamic branching
 #datasets_make(write_data = TRUE)
 
