@@ -2,29 +2,25 @@
 #Function creates z-scores for for each dataset across methods and iterations, and then averages them
 # ignore is a vector of methods to ignore in computing z-scores
 
-bench_standardize <- function(bm_comb, ignore=NULL){
+bench_standardize <- function(bm_comb_clean, ignore=NULL){
 
- #create new var with label names for method
- lab_names <- c("Altman", "Menze", "Permute -\nOblique", "Boruta", "CARET", "Hapfelmeier", "Jiang", "Min Depth \nMedium",
-                "Negation", "None", "Permute - \nAxis", "RRF", "Svetnik", "VSURF")
- bm_comb$method <- factor(bm_comb$rfvs, levels(factor(bm_comb$rfvs)), lab_names)
-
- #exclude methods if specified
+ # exclude methods if specified
  if(is.null(ignore)==F){
-  bm_comb <- bm_comb[bm_comb$rfvs %in% ignore==F,]
+  bm_comb_clean <- bm_comb_clean[bm_comb_clean$rfvs %in% ignore==F,]
  }
 
- bm_comb <- bm_comb %>% mutate(perc_reduced = 1-n_selected/(n_col-1),
-                               log_time = log(as.numeric(time)))
+ # define columns to standardize
+ z_cols <- c("rsq_axis",
+             "rsq_oblique",
+             "time",
+             "log_time",
+             "perc_reduced")
 
- #define columns to standardize
- z_cols <- c("rsq_axis", "rsq_oblique",
-             "time","log_time", "perc_reduced")
-
- #standardize columns
- bm_comb <- bm_comb %>%
-  group_by(dataset,run) %>% mutate(across(.cols = all_of(z_cols),
-                                          .fns = list(z = ~scale(.x)[,1]))) %>% ungroup()
+ # standardize columns
+ bm_comb_clean <- bm_comb_clean %>%
+  group_by(dataset,run) %>%
+  mutate(across(.cols = all_of(z_cols), .fns = list(z = ~scale(.x)[,1]))) %>%
+  ungroup()
 
  smry_cols <- c("n_selected",
                 "perc_reduced",
@@ -32,10 +28,9 @@ bench_standardize <- function(bm_comb, ignore=NULL){
                 "rsq_axis",
                 "rmse_oblique",
                 "rsq_oblique",
-                "time", "log_time")
+                "time",
+                "log_time")
 
- bm_comb <- bm_comb %>%
-  mutate(time = as.numeric(time, units = 'secs'))
 
  # summary for each dataset ----
 
@@ -60,10 +55,10 @@ bench_standardize <- function(bm_comb, ignore=NULL){
   pivot_wider(names_from = quantile,
               values_from = all_of(smry_cols))
 
-
  smry_by_data <- left_join(mean_se, quants)
 
  as.data.frame(smry_by_data)
+
 }
 
 
