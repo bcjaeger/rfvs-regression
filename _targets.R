@@ -17,6 +17,29 @@ lapply(list.files("./R", full.names = TRUE), source)
 datasets_included <- list.files('data', pattern = "-outcome-") %>%
  str_remove("\\.csv$")
 
+# coordinate labels for variable selection methods in tables/figures
+# (figures look nice when the labels include \n for vertical space)
+rfvs_key <- tribble(
+ ~ rfvs_label,      ~ table_label,        ~ figure_label,
+ "alt",             "Altman",             "Altman",
+ "anova",           "Menze",              "Menze",
+ "aorsf",           "Permute - Oblique",  "Permute -\nOblique",
+ "boruta",          "Boruta",             "Boruta",
+ "caret",           "CARET",              "CARET",
+ "hap",             "Hapfelmeier",        "Hapfelmeier",
+ "jiang",           "Jiang",              "Jiang",
+ "mindepth_medium", "Min Depth Medium",   "Min Depth \nMedium",
+ "negate",          "Negation",           "Negation",
+ "none",            "None",               "None",
+ "permute",         "Permute - Axis",     "Permute -\nAxis",
+ "rrf",             "RRF",                "RRF",
+ "svetnik",         "Svetnik",            "Svetnik",
+ "vsurf",           "VSURF",              "VSURF"
+)
+
+# guides for running the benchmark experiment. Comment out methods seen
+#  here to exclude them from the benchmark. Increase runs to add more
+#  splits for each dataset.
 analyses <- expand_grid(
  dataset = datasets_included,
  rfvs_label = c(
@@ -53,7 +76,18 @@ branch_resources <-
  )
 
 
+# Note: targets that start with the term 'datasets' require folder
+#  'data/' created above using datasets_make().
 tar_plan(
+
+ # Dataset management ----
+
+ # cv = coefficient of variation
+ datasets_cv = datasets_cv(),
+ # merge cv into the other characteristics of datasets
+ datasets_full = datasets_full(datasets_cv),
+
+ # Benchmark (i.e., bm) ----
 
  bm <- tar_map(
   values = analyses,
@@ -71,29 +105,32 @@ tar_plan(
   )
  ),
 
+ # stack benchmark results into one frame
  tar_combine(bm_comb, bm[[1]]),
 
- ##### Create Summary Data set #####
- results_smry = bench_summarize(bm_comb),
+ # edit/add new columns to benchmark
+ bm_comb_clean = bench_clean(bm_comb),
 
- #### Create Summary Data Set Z-scores ####
- results_z = bench_standardize(bm_comb, ignore=c("hap")),
+ # Results ----
 
- ###### Datasets summary ##########
- # requires folder 'data/' created above using datasets_make()
- datasets_cv = datasets_cv(), #calculates coeficcient of variation of each data set
- datasets_full = datasets_full(datasets_cv), #appends datasets_cv to datasets_selected
+ # summary of benchmark
+ results_smry = bench_summarize(bm_comb_clean),
 
- #dataset summary figure. Requires "grid.arrange(fig_datasets_smry)
+ # summary of benchmark using z-scores
+ results_z = bench_standardize(bm_comb_clean, ignore=c("hap")),
+
+ # Tables ----
+
+ # Figures ----
+
+ # summary figure of data characteristics
  fig_datasets_smry = vis_datasets_smry(datasets_full),
-
- ###### Results Summary ##########
-
- # Distribution plots
 
  # Mean and Median R-square by Forest Type
  fig_rsq_median = vis_rsq_median(results_smry, exclude.hap=T, exclude.none = F),
  fig_rsq_means = vis_rsq_means(results_smry, exclude.hap=T, exclude.none = F),
+
+ # Outputs ----
 
  tar_render(readme, "README.Rmd")
 
