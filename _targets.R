@@ -75,6 +75,13 @@ branch_resources <-
   future = tar_resources_future(resources = list(n_cores=1))
  )
 
+cols_to_summarize <- c("n_selected",
+                       "perc_reduced",
+                       "rsq_axis",
+                       "rsq_oblique",
+                       "time",
+                       "log_time")
+
 
 # Note: targets that start with the term 'datasets' require folder
 #  'data/' created above using datasets_make().
@@ -108,16 +115,13 @@ tar_plan(
  # stack benchmark results into one frame
  tar_combine(bm_comb, bm[[1]]),
 
- # edit/add new columns to benchmark
- bm_comb_clean = bench_clean(bm_comb),
+ # edit/add new columns to benchmark (includes standardization)
+ bm_comb_clean = bench_clean(bm_comb, cols_to_standardize = cols_to_summarize),
 
  # Results ----
 
  # summary of benchmark
- results_smry = bench_summarize(bm_comb_clean),
-
- # summary of benchmark using z-scores
- results_z = bench_standardize(bm_comb_clean, ignore=c("hap")),
+ results_smry = bench_summarize(bm_comb_clean, cols_to_summarize),
 
  # Tables ----
 
