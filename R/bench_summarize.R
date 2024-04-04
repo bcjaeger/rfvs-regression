@@ -6,9 +6,6 @@
 #' @param results
 bench_summarize <- function(bm_comb) {
 
- bm_comb <- bm_comb %>% mutate(perc_reduced = 1-n_selected/(n_col-1),
-                               log_time = log(as.numeric(time)))
-
  smry_cols <- c("n_selected",
                 "perc_reduced",
                 "rmse_axis",
@@ -18,7 +15,9 @@ bench_summarize <- function(bm_comb) {
                 "time", "log_time" )
 
  bm_comb <- bm_comb %>%
-  mutate(time = as.numeric(time, units = 'secs'))
+  mutate(perc_reduced = 1 - n_selected / (n_col - 1),
+         time = as.numeric(time, units = 'secs'),
+         log_time = log(time))
 
  # summary for each dataset ----
 
