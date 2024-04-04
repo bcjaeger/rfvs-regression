@@ -90,9 +90,8 @@ tar_plan(
  # Dataset management ----
 
  # cv = coefficient of variation
- datasets_cv = datasets_cv(),
- # merge cv into the other characteristics of datasets
- datasets_full = datasets_full(datasets_cv),
+ datasets = read_csv('data/datasets_included.csv') %>%
+  left_join(datasets_cv(), by = 'name'),
 
  # Benchmark (i.e., bm) ----
 
@@ -128,11 +127,17 @@ tar_plan(
  # Figures ----
 
  # summary figure of data characteristics
- fig_datasets_smry = vis_datasets_smry(datasets_full),
+ fig_datasets_smry = vis_datasets_smry(datasets),
 
  # Mean and Median R-square by Forest Type
- fig_rsq_median = vis_rsq_median(results_smry, exclude.hap=T, exclude.none = F),
- fig_rsq_means = vis_rsq_means(results_smry, exclude.hap=T, exclude.none = F),
+ fig_rsq_median = vis_rsq(results_smry$overall,
+                          matches("^rsq.*_50$"), -contains('_z_'),
+                          rfvs_key = rfvs_key),
+
+ fig_rsq_means = vis_rsq(results_smry$overall,
+                         matches("^rsq.*_mean$"), -contains('_z_'),
+                         rfvs_key = rfvs_key),
+
 
  # Outputs ----
 

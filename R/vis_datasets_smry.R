@@ -17,7 +17,7 @@ vis_datasets_smry <- function(df){
   theme_bw() +
   geom_hline(yintercept = 0) +
   scale_x_continuous(breaks = c(0, 1, 2, 3, 4, 5, 10, 15, 40, 50, 60, 70, 80)) +
-  scale_x_break(c(15, 45), scale = .5) +
+  scale_x_break(breaks = c(15, 45), scales = .5) +
   theme(
    axis.text.x.top = element_blank(),
    axis.ticks.x.top = element_blank(),
