@@ -133,9 +133,9 @@ tar_plan(
                           matches("^rsq.*_50$"), -contains('_z_'),
                           rfvs_key = rfvs_key),
 
- fig_rsq_means = vis_rsq(results_smry$overall,
-                         matches("^rsq.*_mean$"), -contains('_z_'),
-                         rfvs_key = rfvs_key),
+ fig_rsq_mean = vis_rsq(results_smry$overall,
+                        matches("^rsq.*_mean$"), -contains('_z_'),
+                        rfvs_key = rfvs_key),
 
 
  # Outputs ----

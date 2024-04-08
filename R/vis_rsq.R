@@ -36,8 +36,8 @@ vis_rsq <- function(df,
         legend.position = 'inside',
         legend.position.inside = c(0.9,0.15)) +
   coord_flip() +
-  scale_y_continuous(limits= c(.33, .45),
-                     breaks=seq(from=0.33, to=0.45, .02),
+  scale_y_continuous(# limits= c(.33, .45),
+                     # breaks=seq(from=0.33, to=0.45, .02),
                      expand = c(0.01, 0.01)) +
 
   labs(x = "Variable selection method",
