@@ -1,5 +1,5 @@
 
-
+#' evaluate prediction accuracy
 
 eval_rmse <- function(estimate, truth){
 
